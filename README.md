@@ -1,4 +1,4 @@
-# **Smart Irrigation Monitoring Pipeline** 🌟  
+# **Real-time Irrigation Monitoring Pipeline** 🌟  
 This project is an end-to-end pipeline for **real-time irrigation monitoring** using **AWS services** and **Azure OpenAI**. Combining IoT, machine learning, and AI, this solution aims to revolutionize agriculture 🌱 by providing intelligent insights for efficient water usage.  
 
 ![Architecture Diagram](https://github.com/user-attachments/assets/41a67711-3c32-423c-b48c-904d633dd788)  
