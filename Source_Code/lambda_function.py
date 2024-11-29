@@ -1,49 +1,69 @@
 import json
 import boto3
-import time
+import joblib
+import numpy as np
 from datetime import datetime
+from io import BytesIO
 
 # Initialize the S3 client
 s3_client = boto3.client('s3')
 
 # S3 bucket and folder details
 BUCKET_NAME = 'projectkafkabucket'
-FOLDER_NAME = 'sensor_data/'
-
-# Batch size
+MODEL_PATH = 'models/xgboost_model.joblib'
+PREDICTIONS_FOLDER = 'predicted_data/'
 BATCH_SIZE = 10
 
-# Buffer to hold the batch
 buffer = []
+
+def load_model_from_s3():
+    try:
+        response = s3_client.get_object(Bucket=BUCKET_NAME, Key=MODEL_PATH)
+        model_data = response['Body'].read()
+        model = joblib.load(BytesIO(model_data))
+        print("Model loaded successfully from S3.")
+        return model
+    except Exception as e:
+        print(f"Error loading model: {e}")
+        raise e
+
+def apply_model(model, batch):
+    predictions = []
+    for record in batch:
+        features = record.get('features')
+        if features:
+            features_array = np.array(features).reshape(1, -1)  # Reshape for XGBoost
+            prediction = model.predict(features_array)[0]  # Get the first prediction
+            record['prediction'] = float(prediction)  # Add prediction to the record
+            predictions.append(record)
+    return predictions
 
 def lambda_handler(event, context):
     global buffer
     try:
-        # Process incoming records
+        model = load_model_from_s3()
+        
         for record in event['Records']:
-            # Decode the Kinesis data
             payload = json.loads(record['kinesis']['data'])
             buffer.append(payload)
             
-            # Check if the buffer size reached the BATCH_SIZE
             if len(buffer) >= BATCH_SIZE:
-                # Create a timestamped filename for the batch
-                timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-                file_name = f"{FOLDER_NAME}batch_{timestamp}.json"
+                processed_data = apply_model(model, buffer)
                 
-                # Upload the batch to S3
+                timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+                file_name = f"{PREDICTIONS_FOLDER}predictions_{timestamp}.json"
+                
                 s3_client.put_object(
                     Bucket=BUCKET_NAME,
                     Key=file_name,
-                    Body=json.dumps(buffer, indent=2)
+                    Body=json.dumps(processed_data, indent=2)
                 )
                 
-                # Clear the buffer after uploading
                 buffer = []
         
         return {
             'statusCode': 200,
-            'body': json.dumps('Processed records successfully!')
+            'body': json.dumps('Processed records successfully with predictions!')
         }
     except Exception as e:
         print(f"Error: {e}")
@@ -51,3 +71,4 @@ def lambda_handler(event, context):
             'statusCode': 500,
             'body': json.dumps(f"Error processing records: {str(e)}")
         }
+
