@@ -4,6 +4,10 @@ This project is an end-to-end pipeline for **real-time irrigation monitoring** u
 ![Topic  sensor-data (13)](https://github.com/user-attachments/assets/1f7fe0e6-5801-4dc9-94d2-18f13ee640f7)
 ![Capture d'écran 2024-11-26 224036](https://github.com/user-attachments/assets/e3891f36-f4a2-4386-b46a-ba1056319340)
 
+---
+## **Link for demo video**  
+
+https://www.linkedin.com/posts/nouha-ben-hamada-333898242_iot-ai-machinelearning-activity-7268588738392322048-CBPe?utm_source=share&utm_medium=member_desktop
 
 ---
 
